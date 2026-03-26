@@ -2,18 +2,12 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import Login from './pages/Login';
 import AthleteLog from './pages/AthleteLog';
-import CoachDashboard from './pages/CoachDashboard';
 import './App.css';
 
-function ProtectedRoute({ children, userRole, requiredRole }) {
+function ProtectedRoute({ children, userRole }) {
   if (!userRole) {
     return <Navigate to="/login" replace />;
   }
-
-  if (requiredRole && userRole !== requiredRole) {
-    return <Navigate to={userRole === 'coach' ? '/dashboard' : '/log'} replace />;
-  }
-
   return children;
 }
 
@@ -41,7 +35,7 @@ function App() {
         <Route
           path="/log"
           element={
-            <ProtectedRoute userRole={userRole} requiredRole="athlete">
+            <ProtectedRoute userRole={userRole}>
               <AthleteLog />
             </ProtectedRoute>
           }
@@ -50,22 +44,13 @@ function App() {
         <Route
           path="/history"
           element={
-            <ProtectedRoute userRole={userRole} requiredRole="athlete">
+            <ProtectedRoute userRole={userRole}>
               <AthleteLog showHistory />
             </ProtectedRoute>
           }
         />
 
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute userRole={userRole} requiredRole="coach">
-              <CoachDashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route path="/" element={<Navigate to={user ? (userRole === 'coach' ? '/dashboard' : '/log') : '/login'} replace />} />
+        <Route path="/" element={<Navigate to={user ? '/log' : '/login'} replace />} />
       </Routes>
     </BrowserRouter>
   );

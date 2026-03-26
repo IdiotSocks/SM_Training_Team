@@ -53,6 +53,83 @@ export default function AthleteLog({ showHistory = false }) {
     setEditingData(null);
   };
 
+  const downloadCSV = () => {
+    if (logs.length === 0) {
+      alert('No logs to export');
+      return;
+    }
+
+    // CSV columns: date, feel_overall, feel_legs, feel_breathing, feel_motivation,
+    // inhaler_am, inhaler_pm, inhaler_pre_race, inhaler_notes,
+    // alcohol_units, late_night, travel, high_stress, illness, illness_notes,
+    // sauna, boots, altitude_chamber, heat_treadmill, recovery_notes,
+    // supplements, notes
+    const headers = [
+      'Date',
+      'Feel Overall',
+      'Feel Legs',
+      'Feel Breathing',
+      'Feel Motivation',
+      'Inhaler AM',
+      'Inhaler PM',
+      'Inhaler Pre-Race',
+      'Medication Notes',
+      'Alcohol Units',
+      'Late Night',
+      'Travel',
+      'High Stress',
+      'Illness',
+      'Illness Notes',
+      'Sauna (mins)',
+      'Compression Boots (mins)',
+      'Altitude Chamber (mins)',
+      'Heat Treadmill (mins)',
+      'Supplements',
+      'Notes',
+    ];
+
+    const rows = logs.map(log => [
+      log.log_date,
+      log.feel_overall || '',
+      log.feel_legs || '',
+      log.feel_breathing || '',
+      log.feel_motivation || '',
+      log.inhaler_brown_am ? 'Yes' : 'No',
+      log.inhaler_brown_pm ? 'Yes' : 'No',
+      log.inhaler_blue_prerace ? 'Yes' : 'No',
+      log.inhaler_notes || '',
+      log.alcohol_units || '',
+      log.late_night ? 'Yes' : 'No',
+      log.travel ? 'Yes' : 'No',
+      log.high_stress ? 'Yes' : 'No',
+      log.illness ? 'Yes' : 'No',
+      log.illness_notes || '',
+      log.sauna_mins || '',
+      log.boots_mins || '',
+      log.altitude_chamber_mins || '',
+      log.heat_treadmill_mins || '',
+      log.supp_other || '',
+      log.notes || '',
+    ]);
+
+    // Escape CSV values
+    const csvContent = [
+      headers.map(h => `"${h}"`).join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    // Download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `training-log-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) {
     return (
       <Layout userRole={userRole} title="Daily Log">
@@ -88,9 +165,19 @@ export default function AthleteLog({ showHistory = false }) {
 
         {/* History Section */}
         <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-          <h2 className="text-2xl font-bold mb-4">
-            {showHistory ? 'All Entries' : 'Recent Entries'}
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold">
+              {showHistory ? 'All Entries' : 'Recent Entries'}
+            </h2>
+            {logs.length > 0 && (
+              <button
+                onClick={downloadCSV}
+                className="px-4 py-2 bg-green-100 text-green-700 hover:bg-green-200 rounded font-medium transition"
+              >
+                ⬇ Export CSV
+              </button>
+            )}
+          </div>
 
           {logs.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No log entries yet. Create your first entry above!</p>
@@ -113,13 +200,17 @@ export default function AthleteLog({ showHistory = false }) {
                       <div className="mt-2 text-sm text-gray-600 space-y-1">
                         <p>
                           {FEEL_EMOJIS[log.feel_overall] || '—'} Feel: {log.feel_overall}/5
-                          {log.trained_today && ` | 🏃 ${log.session_type}`}
                         </p>
-                        <p>
-                          HRV: {log.hrv_ms || '—'}ms | Recovery: {log.recovery_pct || '—'}%
-                        </p>
-                        {log.coaching_flag && (
-                          <p className="text-red-600 font-medium">⚠️ Flagged for coach</p>
+                        {(log.late_night || log.travel || log.high_stress || log.illness) && (
+                          <p>
+                            {log.late_night && '🌙 Late night '}
+                            {log.travel && '✈️ Travel '}
+                            {log.high_stress && '😟 Stress '}
+                            {log.illness && '🤒 Illness'}
+                          </p>
+                        )}
+                        {log.notes && (
+                          <p className="text-gray-700 italic">{log.notes.substring(0, 60)}...</p>
                         )}
                       </div>
                     </div>
