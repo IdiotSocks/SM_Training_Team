@@ -1,4 +1,4 @@
 {
-  "buildCommand": "cd sm-training-log && npm run build",
+  "buildCommand": "cd sm-training-log && npm install --legacy-peer-deps && npm run build",
   "outputDirectory": "sm-training-log/dist"
 }
