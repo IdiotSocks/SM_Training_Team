@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import TimeInput from './TimeInput';
 import {
   FEEL_EMOJIS,
   ALCOHOL_OPTIONS,
@@ -19,8 +20,11 @@ export default function DailyLogForm({ userId, onSubmit, initialData = null }) {
     feel_breathing: 3,
     feel_motivation: 3,
     inhaler_am: false,
+    inhaler_am_time: '',
     inhaler_pm: false,
+    inhaler_pm_time: '',
     inhaler_prerace: false,
+    inhaler_prerace_time: '',
     inhaler_notes: '',
     alcohol_units: 0,
     late_night: false,
@@ -83,8 +87,11 @@ export default function DailyLogForm({ userId, onSubmit, initialData = null }) {
             feel_breathing: formData.feel_breathing,
             feel_motivation: formData.feel_motivation,
             inhaler_brown_am: formData.inhaler_am || false,
+            inhaler_brown_am_time: formData.inhaler_am_time || null,
             inhaler_brown_pm: formData.inhaler_pm || false,
+            inhaler_brown_pm_time: formData.inhaler_pm_time || null,
             inhaler_blue_prerace: formData.inhaler_prerace || false,
+            inhaler_blue_prerace_time: formData.inhaler_prerace_time || null,
             inhaler_notes: formData.inhaler_notes || null,
             alcohol_units: parseFloat(formData.alcohol_units) || 0,
             late_night: formData.late_night,
@@ -232,14 +239,69 @@ export default function DailyLogForm({ userId, onSubmit, initialData = null }) {
 
       {/* Section B: Medication */}
       <Section title="Medication" id="medication">
-        {INHALERS.map(inhaler => (
+        {/* Brown AM Inhaler */}
+        <div className="mb-4 p-3 bg-gray-100 rounded-lg">
           <ToggleSwitch
-            key={inhaler.key}
-            label={inhaler.label}
-            field={`inhaler_${inhaler.key}`}
-            value={formData[`inhaler_${inhaler.key}`]}
+            label="Brown inhaler (AM)"
+            field="inhaler_am"
+            value={formData.inhaler_am}
           />
-        ))}
+          {formData.inhaler_am && (
+            <div className="mt-3">
+              <label className="text-sm font-medium text-gray-700 block mb-2">
+                Time taken
+              </label>
+              <TimeInput
+                value={formData.inhaler_am_time}
+                onChange={(time) => handleChange('inhaler_am_time', time)}
+                placeholder="06:30"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Brown PM Inhaler */}
+        <div className="mb-4 p-3 bg-gray-100 rounded-lg">
+          <ToggleSwitch
+            label="Brown inhaler (PM)"
+            field="inhaler_pm"
+            value={formData.inhaler_pm}
+          />
+          {formData.inhaler_pm && (
+            <div className="mt-3">
+              <label className="text-sm font-medium text-gray-700 block mb-2">
+                Time taken
+              </label>
+              <TimeInput
+                value={formData.inhaler_pm_time}
+                onChange={(time) => handleChange('inhaler_pm_time', time)}
+                placeholder="18:00"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Blue Pre-race Inhaler */}
+        <div className="mb-4 p-3 bg-gray-100 rounded-lg">
+          <ToggleSwitch
+            label="Blue inhaler (pre-race/session)"
+            field="inhaler_prerace"
+            value={formData.inhaler_prerace}
+          />
+          {formData.inhaler_prerace && (
+            <div className="mt-3">
+              <label className="text-sm font-medium text-gray-700 block mb-2">
+                Time taken
+              </label>
+              <TimeInput
+                value={formData.inhaler_prerace_time}
+                onChange={(time) => handleChange('inhaler_prerace_time', time)}
+                placeholder="09:15"
+              />
+            </div>
+          )}
+        </div>
+
         <textarea
           value={formData.inhaler_notes}
           onChange={(e) => handleChange('inhaler_notes', e.target.value)}

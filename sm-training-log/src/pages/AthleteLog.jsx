@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import Layout from '../components/Layout';
 import DailyLogForm from '../components/DailyLogForm';
+import CorrelationChart from '../components/CorrelationChart';
+import MedicationInsights from '../components/MedicationInsights';
 import { supabase } from '../lib/supabase';
 import { FEEL_EMOJIS } from '../lib/constants';
 
@@ -11,6 +13,7 @@ export default function AthleteLog({ showHistory = false }) {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [editingData, setEditingData] = useState(null);
+  const [analyticsTab, setAnalyticsTab] = useState('correlation'); // 'correlation' or 'medication'
 
   useEffect(() => {
     fetchLogs();
@@ -60,9 +63,9 @@ export default function AthleteLog({ showHistory = false }) {
     }
 
     // CSV columns: date, feel_overall, feel_legs, feel_breathing, feel_motivation,
-    // inhaler_am, inhaler_pm, inhaler_pre_race, inhaler_notes,
+    // inhaler_am, inhaler_am_time, inhaler_pm, inhaler_pm_time, inhaler_pre_race, inhaler_prerace_time, inhaler_notes,
     // alcohol_units, late_night, travel, high_stress, illness, illness_notes,
-    // sauna, boots, altitude_chamber, heat_treadmill, recovery_notes,
+    // sauna, boots, altitude_chamber, heat_treadmill,
     // supplements, notes
     const headers = [
       'Date',
@@ -71,8 +74,11 @@ export default function AthleteLog({ showHistory = false }) {
       'Feel Breathing',
       'Feel Motivation',
       'Inhaler AM',
+      'Inhaler AM Time',
       'Inhaler PM',
+      'Inhaler PM Time',
       'Inhaler Pre-Race',
+      'Inhaler Pre-Race Time',
       'Medication Notes',
       'Alcohol Units',
       'Late Night',
@@ -95,8 +101,11 @@ export default function AthleteLog({ showHistory = false }) {
       log.feel_breathing || '',
       log.feel_motivation || '',
       log.inhaler_brown_am ? 'Yes' : 'No',
+      log.inhaler_brown_am_time || '',
       log.inhaler_brown_pm ? 'Yes' : 'No',
+      log.inhaler_brown_pm_time || '',
       log.inhaler_blue_prerace ? 'Yes' : 'No',
+      log.inhaler_blue_prerace_time || '',
       log.inhaler_notes || '',
       log.alcohol_units || '',
       log.late_night ? 'Yes' : 'No',
@@ -160,6 +169,45 @@ export default function AthleteLog({ showHistory = false }) {
               onSubmit={handleFormSubmit}
               initialData={editingData}
             />
+          </div>
+        )}
+
+        {/* Analytics Section */}
+        {logs.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+            <h2 className="text-2xl font-bold mb-4">Performance Analytics</h2>
+
+            {/* Tab buttons */}
+            <div className="flex gap-2 mb-6 border-b border-gray-200">
+              <button
+                onClick={() => setAnalyticsTab('correlation')}
+                className={`px-4 py-3 font-medium transition border-b-2 ${
+                  analyticsTab === 'correlation'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                📊 Breathing vs Legs
+              </button>
+              <button
+                onClick={() => setAnalyticsTab('medication')}
+                className={`px-4 py-3 font-medium transition border-b-2 ${
+                  analyticsTab === 'medication'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                💊 Medication Timing
+              </button>
+            </div>
+
+            {/* Tab content */}
+            {analyticsTab === 'correlation' && (
+              <CorrelationChart logs={logs} days={30} />
+            )}
+            {analyticsTab === 'medication' && (
+              <MedicationInsights logs={logs} days={30} />
+            )}
           </div>
         )}
 
